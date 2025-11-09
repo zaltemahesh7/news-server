@@ -1,13 +1,16 @@
 import { IUser, User } from "./model";
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
+import { generateToken } from "../../../middlewares/authMiddleware/auth.middleware";
 
 const authService = {
   registerUser: async (userData: Partial<IUser>) => {
     try {
       // Validate required fields
       if (!userData.email || !userData.password || !userData.name) {
-        throw new Error("Name, email, and password are required");
+        const error: any = new Error("Name, email, and password are required");
+        error.statusCode = 400;
+        throw error;
       }
 
       // Check for existing user
@@ -24,8 +27,7 @@ const authService = {
       const { password, ...userWithoutPassword } = savedUser.toObject();
       return userWithoutPassword;
     } catch (error: any) {
-      console.error("Error in registerUser service:", error.message);
-      throw new Error(error.message || "User registration failed");
+      throw error;
     }
   },
 
@@ -33,7 +35,8 @@ const authService = {
     try {
       // Validate input
       if (!email || !password) {
-        throw new Error("Email and password are required");
+        const error = new Error("Email and password are required");
+        throw error;
       }
 
       // Find user by email
@@ -49,11 +52,7 @@ const authService = {
       }
 
       // Generate JWT
-      const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        process.env.JWT_SECRET as string,
-        { expiresIn: "7d" },
-      );
+      const token = generateToken(user.id, user.email, user.role);
 
       // Return user data without password
       const { password: _, ...userWithoutPassword } = user.toObject();
@@ -63,8 +62,7 @@ const authService = {
         user: userWithoutPassword,
       };
     } catch (error: any) {
-      console.error("Error in loginUser service:", error.message);
-      throw new Error(error.message || "Login failed");
+      throw error;
     }
   },
 };
