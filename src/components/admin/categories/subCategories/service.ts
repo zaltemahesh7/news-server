@@ -22,7 +22,7 @@ export const subcategoryService = {
       if (existing) throw new Error("Subcategory already exists in this category");
 
       const newSubcategory = new Subcategory(subcategoryData);
-      return await newSubcategory.save();
+      return { success: true, data: await newSubcategory.save() };
     } catch (error: any) {
       console.error("Error creating subcategory:", error.message);
       throw new Error(error.message || "Failed to create subcategory");
@@ -35,10 +35,13 @@ export const subcategoryService = {
   getSubcategories: async (categoryId?: string) => {
     try {
       const query = categoryId ? { categoryId } : {};
-      return await Subcategory.find(query)
-        .populate("categoryId", "name")
-        .populate("createdBy", "name email role")
-        .sort({ createdAt: -1 });
+      return {
+        success: true,
+        data: await Subcategory.find(query)
+          .populate("categoryId", "name")
+          .populate("createdBy", "name email role")
+          .sort({ createdAt: -1 }),
+      };
     } catch (error: any) {
       console.error("Error fetching subcategories:", error.message);
       throw new Error(error.message || "Failed to fetch subcategories");
@@ -54,7 +57,7 @@ export const subcategoryService = {
         .populate("categoryId", "name")
         .populate("createdBy", "name email role");
       if (!subcategory) throw new Error("Subcategory not found");
-      return subcategory;
+      return { success: true, data: subcategory };
     } catch (error: any) {
       console.error("Error fetching subcategory:", error.message);
       throw new Error(error.message || "Failed to fetch subcategory");
@@ -68,7 +71,7 @@ export const subcategoryService = {
     try {
       const updated = await Subcategory.findByIdAndUpdate(id, updateData, { new: true });
       if (!updated) throw new Error("Subcategory not found");
-      return updated;
+      return { success: true, message: "Subcategory updated successfully", data: updated };
     } catch (error: any) {
       console.error("Error updating subcategory:", error.message);
       throw new Error(error.message || "Failed to update subcategory");
@@ -82,7 +85,7 @@ export const subcategoryService = {
     try {
       const deleted = await Subcategory.findByIdAndDelete(id);
       if (!deleted) throw new Error("Subcategory not found");
-      return { message: "Subcategory deleted successfully" };
+      return { success: true, message: "Subcategory deleted successfully" };
     } catch (error: any) {
       console.error("Error deleting subcategory:", error.message);
       throw new Error(error.message || "Failed to delete subcategory");

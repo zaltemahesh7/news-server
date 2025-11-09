@@ -9,7 +9,7 @@ app.use(express.json());
 
 // routes
 import routes from "./components/routes";
-app.use("/v1", routes);
+app.use("/api/v1", routes);
 
 app.get("/", (_req, res) =>
   res.status(200).json({ status: "ok", message: "Welcome to News API, Use /v1" }),

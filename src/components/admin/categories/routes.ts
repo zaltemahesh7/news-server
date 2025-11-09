@@ -1,16 +1,22 @@
 import express from "express";
-import { categoryController } from "./controller";
 const router = express.Router();
+import subcategoryRoutes from "./subCategories/routes";
+import { categoryController } from "./controller";
+import { protect } from "../../../middlewares/authMiddleware/auth.middleware";
 
 // 🔹 Category Routes (Chained)
-router
-  .route("/categories")
-  .post(categoryController.createCategory)
-  .get(categoryController.getCategories);
+router.use("/subcategories", subcategoryRoutes);
 
 router
-  .route("/categories/:id")
+  .route("/")
+  .get(categoryController.getCategories)
+  .all(protect)
+  .post(categoryController.createCategory);
+
+router
+  .route("/:id")
   .get(categoryController.getCategoryById)
+  .all(protect)
   .put(categoryController.updateCategory)
   .delete(categoryController.deleteCategory);
 

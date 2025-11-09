@@ -5,10 +5,14 @@ export const categoryController = {
   // Create a new category
   createCategory: async (req: Request, res: Response) => {
     try {
-      const category = await categoryService.createCategory(req.body);
-      res.status(201).json({ message: "Category created successfully", category });
+      const payload = req.body;
+      payload.createdBy = (req as any)?.user?.id;
+      const category = await categoryService.createCategory(payload);
+      res.status(201).json({ success: true, message: "Category created successfully", category });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res
+        .status(error.statusCode || 500)
+        .json({ succes: false, message: error.message || "Failed to create category" });
     }
   },
 
@@ -16,9 +20,11 @@ export const categoryController = {
   getCategories: async (req: Request, res: Response) => {
     try {
       const categories = await categoryService.getCategories();
-      res.status(200).json(categories);
+      res.status(200).json({ success: true, data: categories });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res
+        .status(error.statusCode || 500)
+        .json({ success: false, message: error.message || "Failed to get category" });
     }
   },
 
@@ -26,9 +32,11 @@ export const categoryController = {
   getCategoryById: async (req: Request, res: Response) => {
     try {
       const category = await categoryService.getCategoryById(req.params.id);
-      res.status(200).json(category);
+      res.status(200).json({ success: true, data: category });
     } catch (error: any) {
-      res.status(404).json({ message: error.message });
+      res
+        .status(error.statusCode || 500)
+        .json({ success: false, message: error.message || "Failed to get category" });
     }
   },
 
@@ -36,9 +44,9 @@ export const categoryController = {
   updateCategory: async (req: Request, res: Response) => {
     try {
       const updated = await categoryService.updateCategory(req.params.id, req.body);
-      res.status(200).json({ message: "Category updated successfully", updated });
+      res.status(200).json({ success: true, message: "Category updated successfully", updated });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({ success: false, message: error.message });
     }
   },
 
@@ -48,7 +56,7 @@ export const categoryController = {
       const result = await categoryService.deleteCategory(req.params.id);
       res.status(200).json(result);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({ success: false, message: error.message });
     }
   },
 };
