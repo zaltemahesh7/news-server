@@ -1,13 +1,13 @@
 import express from "express";
 const router = express.Router();
 
-import newsRoutes from "./news/routes";
-router.use("/", newsRoutes);
-
 import adminRoures from "./admin/routes";
 router.use("/admin", adminRoures);
 
+import newsRoutes from "./news/routes";
+router.use("/news", newsRoutes);
+
 import userRoutes from "./users/routes";
-router.use("/", userRoutes);
+router.use("/user", userRoutes);
 
 export default router;

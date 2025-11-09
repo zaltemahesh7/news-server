@@ -26,7 +26,7 @@ export const categoryService = {
    */
   getCategories: async () => {
     try {
-      return await Category.find().populate("createdBy", "name email role").sort({ createdAt: -1 });
+      return await Category.find().populate("createdBy", "name").sort({ createdAt: -1 });
     } catch (error: any) {
       console.error("Error fetching categories:", error.message);
       throw new Error(error.message || "Failed to fetch categories");
@@ -68,7 +68,7 @@ export const categoryService = {
     try {
       const deleted = await Category.findByIdAndDelete(id);
       if (!deleted) throw new Error("Category not found");
-      return { message: "Category deleted successfully" };
+      return { success: true, message: "Category deleted successfully" };
     } catch (error: any) {
       console.error("Error deleting category:", error.message);
       throw new Error(error.message || "Failed to delete category");

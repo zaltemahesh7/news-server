@@ -2,20 +2,23 @@ import { Request, Response } from "express";
 import authService from "./services";
 
 const authController = {
-  login: (req: Request, res: Response) => {
+  login: async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
-      // Placeholder logic for user authentication
-      const result = authService.loginUser(email, password);
-      res.status(200).json(result);
+      const response = await authService.loginUser(email, password);
+      res.status(200).json(response);
     } catch (error: any) {
-      res.status(error.status || 500).json({ message: error.message || "Internal Server Error" });
+      console.error("Login Error:", error);
+      res.status(400).json({ message: error.message || "Login failed" });
     }
   },
-  register: (req: Request, res: Response) => {
+  register: async (req: Request, res: Response) => {
     try {
+      const payload = req.body;
+      const newUser = await authService.registerUser(payload);
+      res.status(201).json(newUser);
     } catch (error: any) {
-      res.status(error.status || 500).json({ message: error.message || "Internal Server Error" });
+      res.status(error.statusCode || 500).json({ message: error.message || "Internal Server Error" });
     }
   },
 };
