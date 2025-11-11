@@ -6,65 +6,45 @@ export interface INews extends Document {
   authorId: mongoose.Types.ObjectId;
   categoryId: mongoose.Types.ObjectId;
   tags?: string[];
+  tagsText?: string; // ✅ flattened version for indexing
   thumbnail?: string;
-  media?: {
-    images?: string[];
-    videos?: string[];
-  };
   status: "draft" | "pending" | "approved" | "rejected" | "published";
   scheduledAt?: Date;
   publishedAt?: Date;
-  views: number;
-  likes: number;
-  dislikes: number;
-  moderation?: {
-    reviewedBy?: mongoose.Types.ObjectId;
-    remarks?: string;
-    reviewedAt?: Date;
-  };
-  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const NewsSchema: Schema<INews> = new Schema(
+const NewsSchema = new Schema<INews>(
   {
     title: {
       type: String,
-      required: [true, "Title is required"],
+      required: true,
       trim: true,
-      minlength: 5,
-      maxlength: 200,
     },
     content: {
       type: String,
-      required: [true, "Content is required"],
-      minlength: 20,
+      required: true,
+      trim: true,
     },
     authorId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Author is required"],
+      required: true,
     },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
-      required: [true, "Category is required"],
+      required: true,
     },
-    tags: [
-      {
-        type: String,
-        trim: true,
-        lowercase: true,
-      },
-    ],
-    thumbnail: {
+    tags: {
+      type: [String],
+      trim: true,
+      default: [],
+    },
+    tagsText: {
       type: String,
       default: "",
-    },
-    media: {
-      images: [{ type: String }],
-      videos: [{ type: String }],
     },
     status: {
       type: String,
@@ -77,27 +57,6 @@ const NewsSchema: Schema<INews> = new Schema(
     publishedAt: {
       type: Date,
     },
-    views: {
-      type: Number,
-      default: 0,
-    },
-    likes: {
-      type: Number,
-      default: 0,
-    },
-    dislikes: {
-      type: Number,
-      default: 0,
-    },
-    moderation: {
-      reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
-      remarks: { type: String, trim: true },
-      reviewedAt: { type: Date },
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     timestamps: true,
@@ -105,7 +64,15 @@ const NewsSchema: Schema<INews> = new Schema(
   }
 );
 
-// Index for faster searching by title, tags, and category
-NewsSchema.index({ title: "text", content: "text", tags: 1, categoryId: 1 });
+// ✅ Convert tags array to a flat string before saving
+NewsSchema.pre("save", function (next) {
+  if (this.tags && Array.isArray(this.tags)) {
+    this.tagsText = this.tags.join(" ");
+  }
+  next();
+});
+
+// ✅ Create text index safely
+NewsSchema.index({ title: "text", content: "text", tagsText: "text" });
 
 export const News = mongoose.model<INews>("News", NewsSchema);

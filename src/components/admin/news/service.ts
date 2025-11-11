@@ -6,12 +6,30 @@ const newsServiceAdmin = {
    */
   postNews: async (newsData: Partial<INews>) => {
     try {
-      if (!newsData.title || !newsData.content || !newsData.authorId || !newsData.categoryId) {
+      const { title, content, authorId, categoryId } = newsData;
+
+      // ✅ Basic validation
+      if (!title || !content || !authorId || !categoryId) {
         throw new Error("Title, content, author, and category are required");
       }
 
-      const newNews = new News(newsData);
-      return await newNews.save();
+      // ✅ Handle tags safely (convert array to lowercase, trim spaces)
+      const formattedTags = newsData.tags?.map((tag) => tag.trim().toLowerCase()) || [];
+
+      // ✅ Create new News document
+      const newNews = new News({
+        ...newsData,
+        tags: formattedTags,
+        status: newsData.status || "draft",
+        isDeleted: false,
+        views: 0,
+        likes: 0,
+        dislikes: 0,
+      });
+
+      // ✅ Save and return
+      const savedNews = await newNews.save();
+      return savedNews;
     } catch (error: any) {
       console.error("Error creating news:", error.message);
       throw new Error(error.message || "Failed to create news");
