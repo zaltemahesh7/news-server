@@ -1,33 +1,25 @@
 import { News, INews } from "./model";
 
-const newsServiceAdmin = {
+export const newsService = {
   /**
    * Create a new news article
    */
-  postNews: async (newsData: Partial<INews>) => {
+  createNews: async (newsData: Partial<INews>) => {
     try {
       const { title, content, authorId, categoryId } = newsData;
-
-      // ✅ Basic validation
       if (!title || !content || !authorId || !categoryId) {
-        throw new Error("Title, content, author, and category are required");
+        throw new Error("Title, content, authorId, and categoryId are required");
       }
 
-      // ✅ Handle tags safely (convert array to lowercase, trim spaces)
       const formattedTags = newsData.tags?.map((tag) => tag.trim().toLowerCase()) || [];
 
-      // ✅ Create new News document
       const newNews = new News({
         ...newsData,
         tags: formattedTags,
         status: newsData.status || "draft",
         isDeleted: false,
-        views: 0,
-        likes: 0,
-        dislikes: 0,
       });
 
-      // ✅ Save and return
       const savedNews = await newNews.save();
       return savedNews;
     } catch (error: any) {
@@ -37,23 +29,37 @@ const newsServiceAdmin = {
   },
 
   /**
-   * Get all news or filter by status/category/author
+   * Get all news articles (with pagination & filters)
    */
-  getNews: async (filters: any = {}) => {
+  getAllNews: async (query: any) => {
     try {
-      const query: any = {};
+      const { page = 1, limit = 10, categoryId, authorId, status } = query;
+      const filters: any = { isDeleted: false };
 
-      if (filters.status) query.status = filters.status;
-      if (filters.categoryId) query.categoryId = filters.categoryId;
-      if (filters.authorId) query.authorId = filters.authorId;
-      if (filters.keyword) query.$text = { $search: filters.keyword };
+      if (categoryId) filters.categoryId = categoryId;
+      if (authorId) filters.authorId = authorId;
+      if (status) filters.status = status;
 
-      const newsList = await News.find(query)
-        .populate("authorId", "name email role")
-        .populate("categoryId", "name")
-        .sort({ createdAt: -1 });
+      const skip = (page - 1) * limit;
 
-      return newsList;
+      const [newsList, total] = await Promise.all([
+        News.find(filters)
+          .populate("authorId", "name email")
+          .populate("categoryId", "name")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
+        News.countDocuments(filters),
+      ]);
+
+      return {
+        data: newsList,
+        pagination: {
+          total,
+          currentPage: Number(page),
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     } catch (error: any) {
       console.error("Error fetching news:", error.message);
       throw new Error(error.message || "Failed to fetch news");
@@ -61,11 +67,37 @@ const newsServiceAdmin = {
   },
 
   /**
-   * Update an existing news article
+   * Get news by ID
    */
-  putNews: async (id: string, updateData: Partial<INews>) => {
+  getNewsById: async (id: string) => {
     try {
-      const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true });
+      const news = await News.findById(id)
+        .populate("authorId", "name email")
+        .populate("categoryId", "name");
+
+      if (!news || news.isDeleted) {
+        throw new Error("News not found");
+      }
+      return news;
+    } catch (error: any) {
+      console.error("Error fetching news by ID:", error.message);
+      throw new Error(error.message || "Failed to get news");
+    }
+  },
+
+  /**
+   * Update news article
+   */
+  updateNews: async (id: string, updateData: Partial<INews>) => {
+    try {
+      if (updateData.tags && Array.isArray(updateData.tags)) {
+        updateData.tags = updateData.tags.map((tag) => tag.trim().toLowerCase());
+      }
+
+      const updatedNews = await News.findByIdAndUpdate(id, updateData, {
+        new: true,
+      });
+
       if (!updatedNews) throw new Error("News not found");
       return updatedNews;
     } catch (error: any) {
@@ -73,5 +105,19 @@ const newsServiceAdmin = {
       throw new Error(error.message || "Failed to update news");
     }
   },
+
+  /**
+   * Delete (soft delete) news article
+   */
+  deleteNews: async (id: string) => {
+    try {
+      const deletedNews = await News.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+
+      if (!deletedNews) throw new Error("News not found");
+      return { message: "News deleted successfully" };
+    } catch (error: any) {
+      console.error("Error deleting news:", error.message);
+      throw new Error(error.message || "Failed to delete news");
+    }
+  },
 };
-export default newsServiceAdmin;
