@@ -50,6 +50,6 @@ const DistrictSchema = new Schema<IDistrict>(
 );
 
 // Index for faster searches
-DistrictSchema.index({ name: 1 });
+// DistrictSchema.index({ name: 1 });
 
 export const District = mongoose.model<IDistrict>("District", DistrictSchema);

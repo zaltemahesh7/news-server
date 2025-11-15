@@ -40,6 +40,6 @@ const NewsTypeSchema = new Schema<INewsType>(
   },
 );
 
-NewsTypeSchema.index({ name: 1 });
+// NewsTypeSchema.index({ name: 1 });
 
 export const NewsType = mongoose.model<INewsType>("NewsType", NewsTypeSchema);

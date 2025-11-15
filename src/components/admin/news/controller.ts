@@ -7,7 +7,19 @@ export const newsController = {
    */
   createNews: async (req: Request, res: Response) => {
     try {
-      const { title, content, categoryId, tags, thumbnail, media, status, scheduledAt } = req.body;
+      const {
+        title,
+        content,
+        categoryId,
+        districtId,
+        talukaId,
+        newsTypeId,
+        tags,
+        thumbnail,
+        media,
+        status,
+        scheduledAt,
+      } = req.body;
       const authorId = (req as any)?.user?.id; // user from auth middleware
 
       if (!title || !content || !authorId || !categoryId) {
@@ -22,6 +34,9 @@ export const newsController = {
         content,
         authorId,
         categoryId,
+        districtId,
+        talukaId,
+        newsTypeId,
         tags,
         thumbnail,
         media,

@@ -46,6 +46,9 @@ export const newsService = {
         News.find(filters)
           .populate("authorId", "name email")
           .populate("categoryId", "name")
+          .populate("districtId", "name")
+          .populate("talukaId", "name")
+          .populate("newsTypeId", "name")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -73,7 +76,10 @@ export const newsService = {
     try {
       const news = await News.findById(id)
         .populate("authorId", "name email")
-        .populate("categoryId", "name");
+        .populate("categoryId", "name")
+        .populate("districtId", "name")
+        .populate("talukaId", "name")
+        .populate("newsTypeId", "name");
 
       if (!news || news.isDeleted) {
         throw new Error("News not found");
