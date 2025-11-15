@@ -1,23 +1,7 @@
+import { FilterQuery } from "mongoose";
 import { News, INews } from "../admin/news/model";
 
 const newsServiceAdmin = {
-  /**
-   * Create a new news article
-   */
-  postNews: async (newsData: Partial<INews>) => {
-    try {
-      if (!newsData.title || !newsData.content || !newsData.authorId || !newsData.categoryId) {
-        throw new Error("Title, content, author, and category are required");
-      }
-
-      const newNews = new News(newsData);
-      return await newNews.save();
-    } catch (error: any) {
-      console.error("Error creating news:", error.message);
-      throw new Error(error.message || "Failed to create news");
-    }
-  },
-
   /**
    * Get all news or filter by status/category/author
    */
@@ -42,18 +26,92 @@ const newsServiceAdmin = {
     }
   },
 
-  /**
-   * Update an existing news article
-   */
-  putNews: async (id: string, updateData: Partial<INews>) => {
-    try {
-      const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true });
-      if (!updatedNews) throw new Error("News not found");
-      return updatedNews;
-    } catch (error: any) {
-      console.error("Error updating news:", error.message);
-      throw new Error(error.message || "Failed to update news");
+  getFilteredNews: async (filters: any, pagination: any) => {
+    const {
+      categoryId,
+      newsTypeId,
+      subcategoryId,
+      districtId,
+      talukaId,
+      authorId,
+      status,
+      minViews,
+      maxViews,
+      minLikes,
+      maxLikes,
+      search,
+      startDate,
+      endDate,
+      isDeleted = false,
+    } = filters;
+
+    const { page = 1, limit = 20, sortBy = "createdAt", sortOrder = "desc" } = pagination;
+
+    const query: FilterQuery<INews> = { isDeleted };
+
+    // ===== Basic Filters =====
+    if (categoryId) query.categoryId = categoryId;
+    if (newsTypeId) query.newsTypeId = newsTypeId;
+    if (subcategoryId) query.subcategoryId = subcategoryId;
+    if (districtId) query.districtId = districtId;
+    if (talukaId) query.talukaId = talukaId;
+    if (authorId) query.authorId = authorId;
+    if (status) query.status = status;
+
+    // ===== Range Filters =====
+    if (minViews || maxViews) {
+      query.views = {};
+      if (minViews) query.views.$gte = minViews;
+      if (maxViews) query.views.$lte = maxViews;
     }
+
+    if (minLikes || maxLikes) {
+      query.likes = {};
+      if (minLikes) query.likes.$gte = minLikes;
+      if (maxLikes) query.likes.$lte = maxLikes;
+    }
+
+    // ===== Search (Text Index) =====
+    if (search) {
+      query.$text = { $search: search };
+    }
+
+    // ===== Date Range =====
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = startDate;
+      if (endDate) query.createdAt.$lte = endDate;
+    }
+
+    // ===== Sorting =====
+    const sort: any = {};
+    sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      News.find(query)
+        .populate("authorId", "name email")
+        .populate("categoryId", "name")
+        .populate("newsTypeId", "name")
+        .populate("districtId", "name")
+        .populate("talukaId", "name")
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+
+      News.countDocuments(query),
+    ]);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 };
 

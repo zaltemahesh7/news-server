@@ -5,6 +5,7 @@ export interface INews extends Document {
   content: string;
   authorId: mongoose.Types.ObjectId;
   categoryId: mongoose.Types.ObjectId;
+  subcategoryId: mongoose.Types.ObjectId;
   districtId: mongoose.Types.ObjectId;
   talukaId: mongoose.Types.ObjectId;
   newsTypeId: mongoose.Types.ObjectId;
@@ -54,6 +55,11 @@ const NewsSchema = new Schema<INews>(
       type: Schema.Types.ObjectId,
       ref: "Category",
       required: [true, "Category is required"],
+    },
+    subcategoryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Subcategory",
+      // required: [true, "Subcategory is required"],
     },
     districtId: {
       type: Schema.Types.ObjectId,
