@@ -18,7 +18,20 @@ const authController = {
       const newUser = await authService.registerUser(payload);
       res.status(201).json(newUser);
     } catch (error: any) {
-      res.status(error.statusCode || 500).json({ message: error.message || "Internal Server Error" });
+      res
+        .status(error.statusCode || 500)
+        .json({ message: error.message || "Internal Server Error" });
+    }
+  },
+  changeRole: async (req: Request, res: Response) => {
+    try {
+      const payload = req.body;
+      const newUser = await authService.changeRole(payload);
+      res.status(201).json(newUser);
+    } catch (error: any) {
+      res
+        .status(error.statusCode || 500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   },
 };

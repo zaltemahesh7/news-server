@@ -2,6 +2,7 @@ import { IUser, User } from "./model";
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 import { generateToken } from "../../../middlewares/authMiddleware/auth.middleware";
+import mongoose from "mongoose";
 
 const authService = {
   registerUser: async (userData: Partial<IUser>) => {
@@ -62,6 +63,68 @@ const authService = {
         user: userWithoutPassword,
       };
     } catch (error: any) {
+      throw error;
+    }
+  },
+
+  changeRole: async (id: any, role: any = "user") => {
+    try {
+      // Validate required fields
+      if (!id) {
+        const error: any = new Error("User ID is required");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      // Validate role input
+      const validRoles = ["user", "admin", "moderator"]; // Add your valid roles here
+      if (!validRoles.includes(role)) {
+        const error: any = new Error(`Invalid role. Must be one of: ${validRoles.join(", ")}`);
+        error.statusCode = 400;
+        throw error;
+      }
+
+      // Validate ID format (if using MongoDB ObjectId)
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        const error: any = new Error("Invalid user ID format");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      // Check for existing user and update role
+      const existingUser = await User.findByIdAndUpdate(
+        id,
+        { role: role },
+        { new: true, runValidators: true }, // Return updated document and run validators
+      );
+
+      // Verify user was found and updated
+      if (!existingUser) {
+        const error: any = new Error("User not found");
+        error.statusCode = 404;
+        throw error;
+      }
+
+      // Log the role change for audit purposes
+      console.log(`User ${existingUser._id} role changed to: ${role}`);
+
+      return {
+        success: true,
+        message: `User role updated successfully to ${role}`,
+        user: {
+          id: existingUser._id,
+          email: existingUser.email, // or other identifying fields
+          role: existingUser.role,
+        },
+      };
+    } catch (error: any) {
+      // Enhance error information
+      if (error.name === "CastError") {
+        error.message = "Invalid user ID format";
+        error.statusCode = 400;
+      }
+
+      console.error(`Error changing role for user ${id}:`, error.message);
       throw error;
     }
   },
