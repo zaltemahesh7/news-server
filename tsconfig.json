@@ -8,8 +8,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "sourceMap": true,
-    "types": ["node", "express"]
+    "sourceMap": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
