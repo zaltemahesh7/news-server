@@ -41,5 +41,8 @@
   "overrides": {
     "glob": "^9.3.0",
     "rimraf": "^4.0.0"
+  },
+  "render-build": {
+    "installCommand": "npm install --include=dev"
   }
 }
