@@ -1,12 +1,10 @@
 import dotenv from "dotenv";
-import cors from "cors";
 dotenv.config();
 
 import app from "./app";
 import { connectDB } from "./config";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.use(cors({ origin: "*" }));
 
 connectDB().then(() => {
   app.listen(PORT, () => {
