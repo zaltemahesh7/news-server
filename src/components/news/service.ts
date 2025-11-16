@@ -93,7 +93,7 @@ const newsServiceAdmin = {
       News.find(query)
         .populate("authorId", "name email")
         .populate("categoryId", "name")
-        .populate("Subcategory", "name")
+        .populate("subcategoryId", "name")
         .populate("newsTypeId", "name")
         .populate("districtId", "name")
         .populate("talukaId", "name")
